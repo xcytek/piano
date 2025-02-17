@@ -1,46 +1,79 @@
 const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
 
-// Piano notes frequencies (A4 = 440Hz as reference)
-const NOTES = [
-  261.63, // C4
-  293.66, // D4
-  329.63, // E4
-  349.23, // F4
-  392.00, // G4
-  440.00, // A4
-  493.88, // B4
-  523.25, // C5
-  587.33, // D5
-  659.25, // E5
-  698.46, // F5
-  783.99, // G5
+interface Note {
+  name: string;
+  frequency: number;
+}
+
+// Piano notes with their frequencies and names
+export const NOTES: Note[] = [
+  { name: 'C4', frequency: 261.63 },
+  { name: 'D4', frequency: 293.66 },
+  { name: 'E4', frequency: 329.63 },
+  { name: 'F4', frequency: 349.23 },
+  { name: 'G4', frequency: 392.00 },
+  { name: 'A4', frequency: 440.00 },
+  { name: 'B4', frequency: 493.88 },
+  { name: 'C5', frequency: 523.25 },
+  { name: 'D5', frequency: 587.33 },
+  { name: 'E5', frequency: 659.25 },
+  { name: 'F5', frequency: 698.46 },
+  { name: 'G5', frequency: 783.99 },
 ];
 
 export async function playNote(frequency: number) {
   try {
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
+    // Create multiple oscillators for richer sound
+    const oscillators = [
+      createOscillator('sine', frequency),
+      createOscillator('triangle', frequency),
+      createOscillator('square', frequency * 2, 0.1), // Octave higher, lower volume
+    ];
 
-    oscillator.type = 'sine';
-    oscillator.frequency.value = frequency;
-    
-    gainNode.gain.value = 0;
+    const masterGain = audioContext.createGain();
+    masterGain.connect(audioContext.destination);
 
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
+    // Connect all oscillators through their individual gain nodes
+    oscillators.forEach(osc => {
+      osc.connect(masterGain);
+    });
 
-    // Attack
-    gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.1);
-    // Release
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+    // Piano-like envelope
+    const now = audioContext.currentTime;
+    masterGain.gain.setValueAtTime(0, now);
+    masterGain.gain.linearRampToValueAtTime(0.7, now + 0.02); // Quick attack
+    masterGain.gain.exponentialRampToValueAtTime(0.1, now + 0.3); // Decay
+    masterGain.gain.exponentialRampToValueAtTime(0.001, now + 1.5); // Release
 
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + 1);
+    // Start and stop all oscillators
+    oscillators.forEach(osc => {
+      osc.oscillator.start(now);
+      osc.oscillator.stop(now + 1.5);
+    });
+
   } catch (error) {
     console.error('Error playing note:', error);
   }
 }
 
-export function getRandomNote(): number {
+type OscillatorType = 'sine' | 'triangle' | 'square' | 'sawtooth';
+
+function createOscillator(type: OscillatorType, frequency: number, volume = 0.5) {
+  const oscillator = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
+
+  oscillator.type = type;
+  oscillator.frequency.value = frequency;
+  gainNode.gain.value = volume;
+
+  oscillator.connect(gainNode);
+
+  return {
+    oscillator,
+    connect: (destination: AudioNode) => gainNode.connect(destination)
+  };
+}
+
+export function getRandomNote(): Note {
   return NOTES[Math.floor(Math.random() * NOTES.length)];
 }
