@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.xcytek.piano" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>Piano Soundboard</name>
+    <description>Interactive web-based piano soundboard with dynamic sound generation</description>
+    <author email="dev@xcytek.com" href="https://github.com/xcytek/piano">
+        XCytek Piano Team
+    </author>
+    <content src="index.html" />
+
+    <preference name="Orientation" value="portrait" />
+    <preference name="DisallowOverscroll" value="true" />
+    <preference name="BackgroundColor" value="0xffffffff" />
+
+    <platform name="android">
+        <allow-intent href="http://*/*" />
+        <allow-intent href="https://*/*" />
+
+        <!-- Audio permissions -->
+        <config-file target="AndroidManifest.xml" parent="/*">
+            <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+            <uses-permission android:name="android.permission.RECORD_AUDIO" />
+        </config-file>
+    </platform>
+
+    <!-- Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" 
+          content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval' 'unsafe-inline'; 
+                   style-src 'self' 'unsafe-inline'; 
+                   media-src *; 
+                   img-src 'self' data: content:;" />
+</widget>
