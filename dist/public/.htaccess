@@ -1,0 +1,16 @@
+# Enable rewrite engine
+RewriteEngine On
+
+# If the requested file or directory doesn't exist
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Rewrite all requests to the root index.html
+RewriteRule ^ index.html [QSA,L]
+
+# Set proper MIME types
+AddType application/javascript .js
+AddType text/css .css
+
+# Enable CORS if needed
+Header set Access-Control-Allow-Origin "*"
